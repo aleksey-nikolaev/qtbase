@@ -1014,7 +1014,7 @@ public:
     }
     virtual void addElement(const QString &filepath, const VCFilterFile &allInfo) = 0;
     virtual void removeElements()= 0;
-    virtual void generateXML(XmlOutput &xml, const QString &tagName, VCProject &tool, const QString &filter) = 0;
+    virtual void generateXML(XmlOutput &xml, const QString &tagName, const VCProject &tool, const QString &filter) = 0;
     virtual bool hasElements() = 0;
 };
 
@@ -1064,7 +1064,7 @@ public:
         children.clear();
     }
 
-    void generateXML(XmlOutput &xml, const QString &tagName, VCProject &tool, const QString &filter);
+    void generateXML(XmlOutput &xml, const QString &tagName, const VCProject &tool, const QString &filter);
     bool hasElements() {
         return children.size() != 0;
     }
@@ -1104,7 +1104,7 @@ public:
         children.clear();
     }
 
-    void generateXML(XmlOutput &xml, const QString &tagName, VCProject &proj, const QString &filter);
+    void generateXML(XmlOutput &xml, const QString &tagName, const VCProject &proj, const QString &filter);
     bool hasElements() {
         return children.size() != 0;
     }
@@ -1114,6 +1114,8 @@ public:
 class VCProject
 {
 public:
+    VCProject();
+    explicit VCProject(const VCProjectSingleConfig &single);
     // Variables
     QString                 Name;
     QString                 Version;
@@ -1128,7 +1130,7 @@ public:
     QList<VCProjectSingleConfig>  SingleProjects;
 
     // List of all extracompilers
-    QStringList             ExtraCompilers;
+    QSet<QString>           ExtraCompilers;
 };
 
 class VCProjectWriter
@@ -1136,8 +1138,8 @@ class VCProjectWriter
 public:
     virtual ~VCProjectWriter() {}
 
-    virtual void write(XmlOutput &, VCProjectSingleConfig &);
-    virtual void write(XmlOutput &, VCProject &);
+    virtual void write(XmlOutput &, const VCProjectSingleConfig &);
+    virtual void write(XmlOutput &, const VCProject &);
 
     virtual void write(XmlOutput &, const VCCLCompilerTool &);
     virtual void write(XmlOutput &, const VCLinkerTool &);
@@ -1150,11 +1152,11 @@ public:
     virtual void write(XmlOutput &, const VCDeploymentTool &);
     virtual void write(XmlOutput &, const VCWinDeployQtTool &);
     virtual void write(XmlOutput &, const VCConfiguration &);
-    virtual void write(XmlOutput &, VCFilter &);
+    virtual void write(XmlOutput &, const VCFilter &);
 
 private:
-    static void outputFilter(VCProject &project, XmlOutput &xml, const QString &filtername);
-    static void outputFileConfigs(VCProject &project, XmlOutput &xml, const VCFilterFile &info, const QString &filtername);
+    static void outputFilter(const VCProject &project, XmlOutput &xml, const QString &filtername);
+    static void outputFileConfigs(const VCProject &project, XmlOutput &xml, const VCFilterFile &info, const QString &filtername);
     static void outputFileConfig(VCFilter &filter, XmlOutput &xml, const QString &filename);
 
     friend class TreeNode;

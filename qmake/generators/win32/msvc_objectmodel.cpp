@@ -73,9 +73,9 @@ DotNET vsVersionFromString(const ProString &versionString)
 // XML Tags ---------------------------------------------------------
 const char _Configuration[]                     = "Configuration";
 const char _Configurations[]                    = "Configurations";
-const char q_File[]                              = "File";
+const char q_File[]                             = "File";
 const char _FileConfiguration[]                 = "FileConfiguration";
-const char q_Files[]                             = "Files";
+const char q_Files[]                            = "Files";
 const char _Filter[]                            = "Filter";
 const char _Globals[]                           = "Globals";
 const char _Platform[]                          = "Platform";
@@ -259,6 +259,18 @@ const char _WholeProgramOptimization[]          = "WholeProgramOptimization";
 const char _CompileForArchitecture[]            = "CompileForArchitecture";
 const char _InterworkCalls[]                    = "InterworkCalls";
 const char _GenerateManifest[]                  = "GenerateManifest";
+
+// Filter Names
+const QString _Source_Files       = QStringLiteral("Source Files");
+const QString _Header_Files       = QStringLiteral("Header Files");
+const QString _Generated_Files    = QStringLiteral("Generated Files");
+const QString _Form_Files         = QStringLiteral("Form Files");
+const QString _Resource_Files     = QStringLiteral("Resource Files");
+const QString _Deployment_Files   = QStringLiteral("Deployment Files");
+const QString _Translation_Files  = QStringLiteral("Translation Files");
+const QString _LexYacc_Files      = QStringLiteral("LexYacc Files");
+const QString _Distribution_Files = QStringLiteral("Distribution Files");
+const QString _Root_Files         = QStringLiteral("Root Files");
 
 // XmlOutput stream functions ------------------------------
 inline XmlOutput::xml_output attrT(const char *name, const triState v)
@@ -2462,25 +2474,25 @@ bool VCFilter::addExtraCompiler(const VCFilterFile &info)
 // VCProjectSingleConfig --------------------------------------------
 const VCFilter &VCProjectSingleConfig::filterByName(const QString &name) const
 {
-    if (name == "Root Files")
+    if (name == _Root_Files)
         return RootFiles;
-    if (name == "Source Files")
+    if (name == _Source_Files)
         return SourceFiles;
-    if (name == "Header Files")
+    if (name == _Header_Files)
         return HeaderFiles;
-    if (name == "Generated Files")
+    if (name == _Generated_Files)
         return GeneratedFiles;
-    if (name == "LexYacc Files")
+    if (name == _LexYacc_Files)
         return LexYaccFiles;
-    if (name == "Translation Files")
+    if (name == _Translation_Files)
         return TranslationFiles;
-    if (name == "Form Files")
+    if (name == _Form_Files)
         return FormFiles;
-    if (name == "Resource Files")
+    if (name == _Resource_Files)
         return ResourceFiles;
-    if (name == "Deployment Files")
+    if (name == _Deployment_Files)
         return DeploymentFiles;
-    if (name == "Distribution Files")
+    if (name == _Distribution_Files)
         return DistributionFiles;
     return filterForExtraCompiler(name);
 }
@@ -2496,12 +2508,12 @@ const VCFilter &VCProjectSingleConfig::filterForExtraCompiler(const QString &com
 }
 
 // Tree file generation ---------------------------------------------
-void TreeNode::generateXML(XmlOutput &xml, const QString &tagName, VCProject &tool, const QString &filter) {
+void TreeNode::generateXML(XmlOutput &xml, const QString &tagName, const VCProject &tool, const QString &filter) {
     if (children.size()) {
         // Filter
         ChildrenMap::ConstIterator it, end = children.constEnd();
         if (!tagName.isEmpty()) {
-            xml << tag("Filter")
+            xml << tag(_Filter)
                 << attr("Name", tagName)
                 << attr("Filter", "");
         }
@@ -2515,7 +2527,7 @@ void TreeNode::generateXML(XmlOutput &xml, const QString &tagName, VCProject &to
                 (*it)->generateXML(xml, it.key(), tool, filter);
 
         if (!tagName.isEmpty())
-            xml << closetag("Filter");
+            xml << closetag(_Filter);
     } else {
         // Leaf
         VCProjectWriter::outputFileConfigs(tool, xml, info, filter);
@@ -2523,7 +2535,7 @@ void TreeNode::generateXML(XmlOutput &xml, const QString &tagName, VCProject &to
 }
 
 // Flat file generation ---------------------------------------------
-void FlatNode::generateXML(XmlOutput &xml, const QString &/*tagName*/, VCProject &tool, const QString &filter) {
+void FlatNode::generateXML(XmlOutput &xml, const QString &/*tagName*/, const VCProject &tool, const QString &filter) {
     if (children.size()) {
         ChildrenMapFlat::ConstIterator it = children.constBegin();
         ChildrenMapFlat::ConstIterator end = children.constEnd();
@@ -2533,58 +2545,32 @@ void FlatNode::generateXML(XmlOutput &xml, const QString &/*tagName*/, VCProject
     }
 }
 
-void VCProjectWriter::write(XmlOutput &xml, VCProjectSingleConfig &tool)
+VCProject::VCProject()
 {
-    xml << decl("1.0", "Windows-1252")
-        << tag(_VisualStudioProject)
-        << attrS(_ProjectType, "Visual C++")
-        << attrS(_Version, tool.Version)
-        << attrS(_Name, tool.Name)
-        << attrS(_ProjectGUID, tool.ProjectGUID)
-        << attrS(_Keyword, tool.Keyword)
-        << attrS(_SccProjectName, tool.SccProjectName)
-        << attrS(_SccLocalPath, tool.SccLocalPath)
-        << tag(_Platforms)
-        << tag(_Platform)
-        << attrS(_Name, tool.PlatformName)
-        << closetag(_Platforms)
-        << tag(_Configurations);
-    write(xml, tool.Configuration);
-    xml << closetag(_Configurations)
-        << tag(q_Files);
-    // Add this configuration into a multi-config project, since that's where we have the flat/tree
-    // XML output functionality
-    VCProject tempProj;
-    tempProj.SingleProjects += tool;
-    outputFilter(tempProj, xml, "Source Files");
-    outputFilter(tempProj, xml, "Header Files");
-    outputFilter(tempProj, xml, "Generated Files");
-    outputFilter(tempProj, xml, "LexYacc Files");
-    outputFilter(tempProj, xml, "Translation Files");
-    outputFilter(tempProj, xml, "Form Files");
-    outputFilter(tempProj, xml, "Resource Files");
-    outputFilter(tempProj, xml, "Deployment Files");
-    outputFilter(tempProj, xml, "Distribution Files");
-
-    QSet<QString> extraCompilersInProject;
-    for (int i = 0; i < tool.ExtraCompilersFiles.count(); ++i) {
-        const QString &compilerName = tool.ExtraCompilersFiles.at(i).Name;
-        if (!extraCompilersInProject.contains(compilerName)) {
-            extraCompilersInProject += compilerName;
-            tempProj.ExtraCompilers += compilerName;
-        }
-    }
-
-    for (int x = 0; x < tempProj.ExtraCompilers.count(); ++x) {
-        outputFilter(tempProj, xml, tempProj.ExtraCompilers.at(x));
-    }
-    outputFilter(tempProj, xml, "Root Files");
-    xml     << closetag(q_Files)
-            << tag(_Globals)
-                << data(); // No "/>" end tag
 }
 
-void VCProjectWriter::write(XmlOutput &xml, VCProject &tool)
+VCProject::VCProject(const VCProjectSingleConfig &single)
+    : Name(single.Name),
+    Version(single.Version),
+    ProjectGUID(single.ProjectGUID),
+    Keyword(single.Keyword),
+    SccProjectName(single.SccProjectName),
+    SccLocalPath(single.SccLocalPath),
+    PlatformName(single.PlatformName),
+    SdkVersion(single.SdkVersion)
+{
+    SingleProjects += single;
+    for (const auto &extraCompilersFile : single.ExtraCompilersFiles)
+        ExtraCompilers += extraCompilersFile.Name;
+}
+
+void VCProjectWriter::write(XmlOutput &xml, const VCProjectSingleConfig &tool)
+{
+    VCProject tempProj(tool);
+    write(xml, tempProj);
+}
+
+void VCProjectWriter::write(XmlOutput &xml, const VCProject &tool)
 {
     if (tool.SingleProjects.count() == 0) {
         warn_msg(WarnLogic, "Generator: .NET: no single project in merge project, no output");
@@ -2610,19 +2596,19 @@ void VCProjectWriter::write(XmlOutput &xml, VCProject &tool)
         write(xml, tool.SingleProjects.at(i).Configuration);
     xml     << closetag(_Configurations)
             << tag(q_Files);
-    outputFilter(tool, xml, "Source Files");
-    outputFilter(tool, xml, "Header Files");
-    outputFilter(tool, xml, "Generated Files");
-    outputFilter(tool, xml, "LexYacc Files");
-    outputFilter(tool, xml, "Translation Files");
-    outputFilter(tool, xml, "Form Files");
-    outputFilter(tool, xml, "Resource Files");
-    outputFilter(tool, xml, "Deployment Files");
-    outputFilter(tool, xml, "Distribution Files");
-    for (int x = 0; x < tool.ExtraCompilers.count(); ++x) {
-        outputFilter(tool, xml, tool.ExtraCompilers.at(x));
-    }
-    outputFilter(tool, xml, "Root Files");
+    outputFilter(tool, xml, _Source_Files);
+    outputFilter(tool, xml, _Header_Files);
+    outputFilter(tool, xml, _Generated_Files);
+    outputFilter(tool, xml, _LexYacc_Files);
+    outputFilter(tool, xml, _Translation_Files);
+    outputFilter(tool, xml, _Form_Files);
+    outputFilter(tool, xml, _Resource_Files);
+    outputFilter(tool, xml, _Deployment_Files);
+    outputFilter(tool, xml, _Distribution_Files);
+    for (const auto &extraCompiler : tool.ExtraCompilers)
+        outputFilter(tool, xml, extraCompiler);
+
+    outputFilter(tool, xml, _Root_Files);
     xml     << closetag(q_Files)
             << tag(_Globals)
             << data(); // No "/>" end tag
@@ -2920,7 +2906,7 @@ void VCProjectWriter::write(XmlOutput &xml, const VCConfiguration &tool)
     xml << closetag(_Configuration);
 }
 
-void VCProjectWriter::write(XmlOutput &xml, VCFilter &tool)
+void VCProjectWriter::write(XmlOutput &xml, const VCFilter &tool)
 {
     if(!tool.Files.count())
         return;
@@ -2932,12 +2918,12 @@ void VCProjectWriter::write(XmlOutput &xml, VCFilter &tool)
                 << attrS(_UniqueIdentifier, tool.Guid)
                 << attrT(_ParseFiles, tool.ParseFiles);
     }
-    for (int i = 0; i < tool.Files.count(); ++i) {
-        const VCFilterFile &info = tool.Files.at(i);
+    VCFilter filter = tool;// Clone to avoid modify the tool in outputFileConfig
+    for (const auto &info : tool.Files) {
         xml << tag(q_File)
                 << attrS(_RelativePath, Option::fixPathToTargetOS(info.file))
             << data(); // In case no custom builds, to avoid "/>" endings
-        outputFileConfig(tool, xml, tool.Files.at(i).file);
+        outputFileConfig(filter, xml, info.file);
         xml << closetag(q_File);
     }
     if (!tool.Name.isEmpty())
@@ -2945,7 +2931,7 @@ void VCProjectWriter::write(XmlOutput &xml, VCFilter &tool)
 }
 
 // outputs a given filter for all existing configurations of a project
-void VCProjectWriter::outputFilter(VCProject &project, XmlOutput &xml, const QString &filtername)
+void VCProjectWriter::outputFilter(const VCProject &project, XmlOutput &xml, const QString &filtername)
 {
     QScopedPointer<Node> root;
     if (project.SingleProjects.at(0).flat_files)
@@ -2991,7 +2977,7 @@ void VCProjectWriter::outputFilter(VCProject &project, XmlOutput &xml, const QSt
 
 // Output all configurations (by filtername) for a file (by info)
 // A filters config output is in VCFilter.outputFileConfig()
-void VCProjectWriter::outputFileConfigs(VCProject &project, XmlOutput &xml, const VCFilterFile &info, const QString &filtername)
+void VCProjectWriter::outputFileConfigs(const VCProject &project, XmlOutput &xml, const VCFilterFile &info, const QString &filtername)
 {
     xml << tag(q_File)
             << attrS(_RelativePath, Option::fixPathToTargetOS(info.file));

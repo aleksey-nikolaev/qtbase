@@ -155,8 +155,7 @@ BuildsMetaMakefileGenerator::write()
         bool using_stdout = false;
         if(build->makefile && (Option::qmake_mode == Option::QMAKE_GENERATE_MAKEFILE ||
                                Option::qmake_mode == Option::QMAKE_GENERATE_PROJECT)
-           && (!build->makefile->supportsMergedBuilds()
-            || (build->makefile->supportsMergedBuilds() && (!glue || build == glue)))) {
+           && (!build->makefile->supportsMergedBuilds() || !glue || build == glue)) {
             //open output
             if(!(Option::output.isOpen())) {
                 if(Option::output.fileName() == "-") {
