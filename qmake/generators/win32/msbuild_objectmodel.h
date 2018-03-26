@@ -49,7 +49,7 @@ public:
     virtual void addElement(const QString &filepath, const VCFilterFile &allInfo) = 0;
     virtual void removeElements()= 0;
     virtual void generateXML(XmlOutput &xml, XmlOutput &xmlFilter, const QString &tagName,
-                             VCProject &tool, const QString &filter) = 0;
+                             const VCProject &tool, const QString &filter) = 0;
     virtual bool hasElements() = 0;
 };
 
@@ -99,7 +99,7 @@ public:
         children.clear();
     }
 
-    void generateXML(XmlOutput &xml, XmlOutput &xmlFilter, const QString &tagName, VCProject &tool,
+    void generateXML(XmlOutput &xml, XmlOutput &xmlFilter, const QString &tagName, const VCProject &tool,
                      const QString &filter);
     bool hasElements() {
         return children.size() != 0;
@@ -140,7 +140,7 @@ public:
         children.clear();
     }
 
-    void generateXML(XmlOutput &xml, XmlOutput &xmlFilter, const QString &tagName, VCProject &proj,
+    void generateXML(XmlOutput &xml, XmlOutput &xmlFilter, const QString &tagName, const VCProject &proj,
                      const QString &filter);
     bool hasElements() {
         return children.size() != 0;
@@ -150,8 +150,8 @@ public:
 class VCXProjectWriter : public VCProjectWriter
 {
 public:
-    void write(XmlOutput &, VCProjectSingleConfig &);
-    void write(XmlOutput &, VCProject &);
+    void write(XmlOutput &, const VCProjectSingleConfig &);
+    void write(XmlOutput &, const VCProject &);
 
     void write(XmlOutput &, const VCCLCompilerTool &);
     void write(XmlOutput &, const VCLinkerTool &);
@@ -163,23 +163,26 @@ public:
     void write(XmlOutput &, const VCDeploymentTool &);
     void write(XmlOutput &, const VCWinDeployQtTool &);
     void write(XmlOutput &, const VCConfiguration &);
-    void write(XmlOutput &, VCFilter &);
+    void write(XmlOutput &, const VCFilter &);
 
 private:
     struct OutputFilterData
     {
+        OutputFilterData() = default;
+        OutputFilterData(const VCFilter &vcFilter, const VCFilterFile &vcFilterFile);
         VCFilter filter;
         VCFilterFile info;
         bool inBuild;
+        bool hasCustomBuildStep;
     };
 
-    static void addFilters(VCProject &project, XmlOutput &xmlFilter, const QString &filterName);
-    static void outputFilter(VCProject &project, XmlOutput &xml, XmlOutput &xmlFilter, const QString &filtername);
-    static void outputFileConfigs(VCProject &project, XmlOutput &xml, XmlOutput &xmlFilter,
+    static void addFilters(const VCProject &project, XmlOutput &xmlFilter, const QString &filterName);
+    static void outputFilter(const VCProject &project, XmlOutput &xml, XmlOutput &xmlFilter, const QString &filtername);
+    static void outputFileConfigs(const VCProject &project, XmlOutput &xml, XmlOutput &xmlFilter,
                                   const VCFilterFile &info, const QString &filtername);
-    static bool outputFileConfig(OutputFilterData *d, XmlOutput &xml, XmlOutput &xmlFilter,
+    static void outputFileConfig(OutputFilterData &d, XmlOutput &xml, XmlOutput &xmlFilter,
                                  const QString &filename, const QString &fullFilterName,
-                                 bool fileAdded, bool hasCustomBuildStep);
+                                 bool &tagOpened, const bool hasCustomBuildStep);
     static void outputFileConfig(XmlOutput &xml, XmlOutput &xmlFilter, const QString &fileName, const QString &filterName);
     static QString generateCondition(const VCConfiguration &config);
     static XmlOutput::xml_output attrTagToolsVersion(const VCConfiguration &config);

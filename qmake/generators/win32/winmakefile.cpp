@@ -644,7 +644,7 @@ void Win32MakefileGenerator::writeObjectsPart(QTextStream &t)
     t << "OBJECTS       = " << valList(escapeDependencyPaths(project->values("OBJECTS"))) << endl;
 }
 
-void Win32MakefileGenerator::writeImplicitRulesPart(QTextStream &t)
+void Win32MakefileGenerator::writeImplicitRulesPart(QTextStream &)
 {
 }
 

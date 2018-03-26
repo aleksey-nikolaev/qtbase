@@ -57,6 +57,19 @@ const char _GUIDExtraCompilerFiles[]   = "{E0D8C965-CC5F-43d7-AD63-FAEF0BBC0F85}
 const char _GUIDDeploymentFiles[]      = "{D9D6E243-F8AF-46E4-B9FD-80ECBC20BA3E}";
 const char _GUIDDistributionFiles[]    = "{B83CAF91-C7BF-462F-B76C-EA11631F866C}";
 
+// Filter Names -----------------------------------------------------
+const QString _Source_Files       = QStringLiteral("Source Files");
+const QString _Header_Files       = QStringLiteral("Header Files");
+const QString _Generated_Files    = QStringLiteral("Generated Files");
+const QString _Form_Files         = QStringLiteral("Form Files");
+const QString _Resource_Files     = QStringLiteral("Resource Files");
+const QString _Deployment_Files   = QStringLiteral("Deployment Files");
+const QString _Translation_Files  = QStringLiteral("Translation Files");
+const QString _LexYacc_Files      = QStringLiteral("LexYacc Files");
+const QString _Distribution_Files = QStringLiteral("Distribution Files");
+const QString _Root_Files         = QStringLiteral("Root Files");
+
+
 // Flatfile Tags ----------------------------------------------------
 const char _slnHeader70[]       = "Microsoft Visual Studio Solution File, Format Version 7.00";
 const char _slnHeader71[]       = "Microsoft Visual Studio Solution File, Format Version 8.00";
@@ -1178,7 +1191,7 @@ void VcprojGenerator::initDeploymentTool()
     VCConfiguration &conf = vcProject.Configuration;
     QString targetPath;
     if (conf.WinRT) {
-        vcProject.DeploymentFiles.Name = "Deployment Files";
+        vcProject.DeploymentFiles.Name = _Deployment_Files;
         vcProject.DeploymentFiles.ParseFiles = _False;
         vcProject.DeploymentFiles.Filter = "deploy";
         vcProject.DeploymentFiles.Guid = _GUIDDeploymentFiles;
@@ -1368,7 +1381,7 @@ void VcprojGenerator::initRootFiles()
 
 void VcprojGenerator::initSourceFiles()
 {
-    vcProject.SourceFiles.Name = "Source Files";
+    vcProject.SourceFiles.Name = _Source_Files;
     vcProject.SourceFiles.Filter = "cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx";
     vcProject.SourceFiles.Guid = _GUIDSourceFiles;
 
@@ -1380,7 +1393,7 @@ void VcprojGenerator::initSourceFiles()
 
 void VcprojGenerator::initHeaderFiles()
 {
-    vcProject.HeaderFiles.Name = "Header Files";
+    vcProject.HeaderFiles.Name = _Header_Files;
     vcProject.HeaderFiles.Filter = "h;hpp;hxx;hm;inl;inc;xsd";
     vcProject.HeaderFiles.Guid = _GUIDHeaderFiles;
 
@@ -1396,7 +1409,7 @@ void VcprojGenerator::initHeaderFiles()
 
 void VcprojGenerator::initGeneratedFiles()
 {
-    vcProject.GeneratedFiles.Name = "Generated Files";
+    vcProject.GeneratedFiles.Name = _Generated_Files;
     vcProject.GeneratedFiles.Filter = "cpp;c;cxx;moc;h;def;odl;idl;res;";
     vcProject.GeneratedFiles.Guid = _GUIDGeneratedFiles;
 
@@ -1416,7 +1429,7 @@ void VcprojGenerator::initGeneratedFiles()
 
 void VcprojGenerator::initLexYaccFiles()
 {
-    vcProject.LexYaccFiles.Name = "Lex / Yacc Files";
+    vcProject.LexYaccFiles.Name = _LexYacc_Files;
     vcProject.LexYaccFiles.ParseFiles = _False;
     vcProject.LexYaccFiles.Filter = "l;y";
     vcProject.LexYaccFiles.Guid = _GUIDLexYaccFiles;
@@ -1430,7 +1443,7 @@ void VcprojGenerator::initLexYaccFiles()
 
 void VcprojGenerator::initTranslationFiles()
 {
-    vcProject.TranslationFiles.Name = "Translation Files";
+    vcProject.TranslationFiles.Name = _Translation_Files;
     vcProject.TranslationFiles.ParseFiles = _False;
     vcProject.TranslationFiles.Filter = "ts;xlf";
     vcProject.TranslationFiles.Guid = _GUIDTranslationFiles;
@@ -1443,7 +1456,7 @@ void VcprojGenerator::initTranslationFiles()
 
 void VcprojGenerator::initFormFiles()
 {
-    vcProject.FormFiles.Name = "Form Files";
+    vcProject.FormFiles.Name = _Form_Files;
     vcProject.FormFiles.ParseFiles = _False;
     vcProject.FormFiles.Filter = "ui";
     vcProject.FormFiles.Guid = _GUIDFormFiles;
@@ -1454,7 +1467,7 @@ void VcprojGenerator::initFormFiles()
 
 void VcprojGenerator::initResourceFiles()
 {
-    vcProject.ResourceFiles.Name = "Resource Files";
+    vcProject.ResourceFiles.Name = _Resource_Files;
     vcProject.ResourceFiles.ParseFiles = _False;
     vcProject.ResourceFiles.Filter = "qrc;*"; //"rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;ts;xlf;qrc";
     vcProject.ResourceFiles.Guid = _GUIDResourceFiles;
@@ -1503,7 +1516,7 @@ void VcprojGenerator::initResourceFiles()
 
 void VcprojGenerator::initDistributionFiles()
 {
-    vcProject.DistributionFiles.Name = "Distribution Files";
+    vcProject.DistributionFiles.Name = _Distribution_Files;
     vcProject.DistributionFiles.ParseFiles = _False;
     vcProject.DistributionFiles.Filter = "*";
     vcProject.DistributionFiles.Guid = _GUIDDistributionFiles;
