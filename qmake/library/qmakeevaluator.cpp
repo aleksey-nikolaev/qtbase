@@ -1557,6 +1557,8 @@ void QMakeEvaluator::updateFeaturePaths()
     feature_bases << (m_option->propertyValue(ProKey("QT_HOST_DATA/get")) + mkspecs_concat);
     feature_bases << (m_option->propertyValue(ProKey("QT_HOST_DATA/src")) + mkspecs_concat);
 
+    feature_bases.removeDuplicates();
+
     for (const QString &fb : qAsConst(feature_bases)) {
         const auto sfxs = values(ProKey("QMAKE_PLATFORM"));
         for (const ProString &sfx : sfxs)
@@ -1571,9 +1573,12 @@ void QMakeEvaluator::updateFeaturePaths()
     feature_roots.removeDuplicates();
 
     QStringList ret;
-    for (const QString &root : qAsConst(feature_roots))
-        if (IoUtils::exists(root))
+    for (const QString &root : qAsConst(feature_roots)) {
+        if (root.isEmpty() || !IoUtils::isAbsolutePath(root) || !IoUtils::exists(root))
+            languageWarning(fL1S("Wrong Feature Path %1").arg(root));
+        else
             ret << root;
+    }
     m_featureRoots = new QMakeFeatureRoots(ret);
 }
 

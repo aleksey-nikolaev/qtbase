@@ -42,10 +42,16 @@ QT_BEGIN_NAMESPACE
 // XML Tags ---------------------------------------------------------
 const char _CLCompile[]                         = "ClCompile";
 const char _ItemGroup[]                         = "ItemGroup";
+const char _ImportGroup[]                       = "ImportGroup";
+const char _PropertyGroup[]                     = "PropertyGroup";
 const char _Link[]                              = "Link";
 const char _Lib[]                               = "Lib";
 const char _Midl[]                              = "Midl";
+const char _Target[]                            = "Target";
 const char _ResourceCompile[]                   = "ResourceCompile";
+const char _CustomBuild[]                       = "CustomBuild";
+const char _ClInclude[]                         = "ClInclude";
+const char _None[]                              = "None";
 
 // XML Properties ---------------------------------------------------
 const char _AddModuleNamesToAssembly[]          = "AddModuleNamesToAssembly";
@@ -79,6 +85,7 @@ const char _Command[]                           = "Command";
 const char _CompileAs[]                         = "CompileAs";
 const char _CompileAsManaged[]                  = "CompileAsManaged";
 const char _CompileAsWinRT[]                    = "CompileAsWinRT";
+const char _Condition[]                         = "Condition";
 const char _ConfigurationType[]                 = "ConfigurationType";
 const char _CPreprocessOptions[]                = "CPreprocessOptions";
 const char _CreateHotpatchableImage[]           = "CreateHotpatchableImage";
@@ -431,7 +438,7 @@ void VCXProjectWriter::write(XmlOutput &xml, const VCProject &tool)
         << attrTag("DefaultTargets","Build")
         << attrTagToolsVersion(tool.SingleProjects.first().Configuration)
         << attrTag("xmlns", "http://schemas.microsoft.com/developer/msbuild/2003")
-        << tag("ItemGroup")
+        << tag(_ItemGroup)
         << attrTag("Label", "ProjectConfigurations");
 
     bool isWinRT = false;
@@ -445,7 +452,7 @@ void VCXProjectWriter::write(XmlOutput &xml, const VCProject &tool)
     }
 
     xml << closetag()
-        << tag("PropertyGroup")
+        << tag(_PropertyGroup)
         << attrTag("Label", "Globals")
         << tagValue("ProjectGuid", tool.ProjectGUID)
         << tagValue("RootNamespace", tool.Name)
@@ -486,90 +493,90 @@ void VCXProjectWriter::write(XmlOutput &xml, const VCProject &tool)
     xml << import("Project", "$(VCTargetsPath)\\Microsoft.Cpp.props");
 
     // Extension settings
-    xml << tag("ImportGroup")
+    xml << tag(_ImportGroup)
         << attrTag("Label", "ExtensionSettings")
         << closetag();
 
     // PropertySheets
     for (int i = 0; i < tool.SingleProjects.count(); ++i) {
-        xml << tag("ImportGroup")
-                << attrTag("Condition", generateCondition(tool.SingleProjects.at(i).Configuration))
+        xml << tag(_ImportGroup)
+                << attrTag(_Condition, generateCondition(tool.SingleProjects.at(i).Configuration))
                 << attrTag("Label", "PropertySheets")
                 << tag("Import")
                     << attrTag("Project", "$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props")
-                    << attrTag("Condition", "exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')")
+                    << attrTag(_Condition, "exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')")
                 << closetag()
             << closetag();
     }
 
     // UserMacros
-    xml << tag("PropertyGroup")
+    xml << tag(_PropertyGroup)
         << attrTag("Label", "UserMacros")
         << closetag();
 
-    xml << tag("PropertyGroup");
+    xml << tag(_PropertyGroup);
     for (int i = 0; i < tool.SingleProjects.count(); ++i) {
         const VCConfiguration &config = tool.SingleProjects.at(i).Configuration;
         const QString condition = generateCondition(config);
 
         if (!config.OutputDirectory.isEmpty()) {
             xml << tag("OutDir")
-                << attrTag("Condition", condition)
+                << attrTag(_Condition, condition)
                 << valueTag(config.OutputDirectory);
         }
         if (!config.IntermediateDirectory.isEmpty()) {
             xml << tag("IntDir")
-                << attrTag("Condition", condition)
+                << attrTag(_Condition, condition)
                 << valueTag(config.IntermediateDirectory);
         }
         if (!config.PrimaryOutput.isEmpty()) {
             xml << tag("TargetName")
-                << attrTag("Condition", condition)
+                << attrTag(_Condition, condition)
                 << valueTag(config.PrimaryOutput);
         }
         if (!config.PrimaryOutputExtension.isEmpty()) {
             xml << tag("TargetExt")
-                << attrTag("Condition", condition)
+                << attrTag(_Condition, condition)
                 << valueTag(config.PrimaryOutputExtension);
         }
         if (config.linker.IgnoreImportLibrary != unset) {
             xml << tag("IgnoreImportLibrary")
-                << attrTag("Condition", condition)
+                << attrTag(_Condition, condition)
                 << valueTagT(config.linker.IgnoreImportLibrary);
         }
 
         if (config.linker.LinkIncremental != linkIncrementalDefault) {
             const triState ts = (config.linker.LinkIncremental == linkIncrementalYes ? _True : _False);
             xml << tag("LinkIncremental")
-                << attrTag("Condition", condition)
+                << attrTag(_Condition, condition)
                 << valueTagT(ts);
         }
 
         const triState generateManifest = config.linker.GenerateManifest;
         if (generateManifest != unset) {
             xml << tag("GenerateManifest")
-                << attrTag("Condition", condition)
+                << attrTag(_Condition, condition)
                 << valueTagT(generateManifest);
         }
 
         if (config.preBuild.ExcludedFromBuild != unset)
         {
             xml << tag("PreBuildEventUseInBuild")
-                << attrTag("Condition", condition)
+                << attrTag(_Condition, condition)
                 << valueTagT(!config.preBuild.ExcludedFromBuild);
         }
 
         if (config.preLink.ExcludedFromBuild != unset)
         {
             xml << tag("PreLinkEventUseInBuild")
-                << attrTag("Condition", condition)
+                << attrTag(_Condition, condition)
                 << valueTagT(!config.preLink.ExcludedFromBuild);
         }
 
         if (config.postBuild.ExcludedFromBuild != unset)
         {
             xml << tag("PostBuildEventUseInBuild")
-                << attrTag("Condition", condition)
+                << attrTag(_Condition, condition)
                 << valueTagT(!config.postBuild.ExcludedFromBuild);
         }
     }
@@ -579,7 +586,7 @@ void VCXProjectWriter::write(XmlOutput &xml, const VCProject &tool)
         const VCConfiguration &config = tool.SingleProjects.at(i).Configuration;
 
         xml << tag("ItemDefinitionGroup")
-            << attrTag("Condition", generateCondition(config));
+            << attrTag(_Condition, generateCondition(config));
 
         // ClCompile
         write(xml, config.compiler);
@@ -680,7 +687,7 @@ void VCXProjectWriter::write(XmlOutput &xml, const VCProject &tool)
     }
 
     xml << import("Project", "$(VCTargetsPath)\\Microsoft.Cpp.targets")
-        << tag("ImportGroup")
+        << tag(_ImportGroup)
         << attrTag("Label", "ExtensionTargets")
         << closetag();
 }
@@ -1472,28 +1479,28 @@ void VCXProjectWriter::write(XmlOutput &xml, const VCCustomBuildTool &tool)
     if ( !tool.AdditionalDependencies.isEmpty() )
     {
         xml << tag("AdditionalInputs")
-            << attrTag("Condition", condition)
+            << attrTag(_Condition, condition)
             << valueTagDefX(tool.AdditionalDependencies, "AdditionalInputs", ";");
     }
 
     if( !tool.CommandLine.isEmpty() )
     {
         xml << tag("Command")
-            << attrTag("Condition", condition)
+            << attrTag(_Condition, condition)
             << valueTag(tool.CommandLine.join(vcxCommandSeparator()));
     }
 
     if ( !tool.Description.isEmpty() )
     {
         xml << tag("Message")
-            << attrTag("Condition", condition)
+            << attrTag(_Condition, condition)
             << valueTag(tool.Description);
     }
 
     if ( !tool.Outputs.isEmpty() )
     {
         xml << tag("Outputs")
-            << attrTag("Condition", condition)
+            << attrTag(_Condition, condition)
             << valueTagDefX(tool.Outputs, "Outputs", ";");
     }
 }
@@ -1549,9 +1556,9 @@ void VCXProjectWriter::write(XmlOutput &xml, const VCDeploymentTool &tool)
 void VCXProjectWriter::write(XmlOutput &xml, const VCWinDeployQtTool &tool)
 {
     const QString name = QStringLiteral("WinDeployQt_") + tool.config->Name;
-    xml << tag("Target")
+    xml << tag(_Target)
            << attrTag(_Name, name)
-           << attrTag("Condition", generateCondition(*tool.config))
+           << attrTag(_Condition, generateCondition(*tool.config))
            << attrTag("Inputs", "$(OutDir)\\$(TargetName).exe")
            << attrTag("Outputs", tool.Record)
            << tag(_Message)
@@ -1561,9 +1568,9 @@ void VCXProjectWriter::write(XmlOutput &xml, const VCWinDeployQtTool &tool)
              << attrTag("Command", tool.CommandLine)
            << closetag()
         << closetag()
-        << tag("Target")
+        << tag(_Target)
            << attrTag(_Name, QStringLiteral("PopulateWinDeployQtItems_") + tool.config->Name)
-           << attrTag("Condition", generateCondition(*tool.config))
+           << attrTag(_Condition, generateCondition(*tool.config))
            << attrTag("AfterTargets", "Link")
            << attrTag("DependsOnTargets", name)
            << tag("ReadLinesFromFile")
@@ -1574,7 +1581,7 @@ void VCXProjectWriter::write(XmlOutput &xml, const VCWinDeployQtTool &tool)
               << closetag()
            << closetag()
            << tag(_ItemGroup)
-              << tag("None")
+              << tag(_None)
                  << attrTag("Include", "@(DeploymentItems)")
                  << attrTagT("DeploymentContent", _True)
               << closetag()
@@ -1584,8 +1591,8 @@ void VCXProjectWriter::write(XmlOutput &xml, const VCWinDeployQtTool &tool)
 
 void VCXProjectWriter::write(XmlOutput &xml, const VCConfiguration &tool)
 {
-        xml << tag("PropertyGroup")
-            << attrTag("Condition", generateCondition(tool))
+        xml << tag(_PropertyGroup)
+            << attrTag(_Condition, generateCondition(tool))
             << attrTag("Label", "Configuration")
             << attrTagS(_PlatformToolSet, tool.PlatformToolSet)
             << attrTagS(_OutputDirectory, tool.OutputDirectory)
@@ -1786,11 +1793,11 @@ void VCXProjectWriter::outputFileConfig(OutputFilterData &d, XmlOutput &xml, Xml
             if (!tagOpened) {
                 tagOpened = true;
 
-                xmlFilter << tag("CustomBuild")
+                xmlFilter << tag(_CustomBuild)
                     << attrTag("Include", Option::fixPathToTargetOS(filename))
                     << attrTagS("Filter", fullFilterName);
 
-                xml << tag("CustomBuild")
+                xml << tag(_CustomBuild)
                     << attrTag("Include", Option::fixPathToTargetOS(filename));
 
                 if (filter.Name.startsWith(_Form_Files)
@@ -1812,13 +1819,13 @@ void VCXProjectWriter::outputFileConfig(OutputFilterData &d, XmlOutput &xml, Xml
         const QString condition = generateCondition(*filter.Config);
         if (!d.inBuild) {
             xml << tag("ExcludedFromBuild")
-                << attrTag("Condition", condition)
+                << attrTag(_Condition, condition)
                 << valueTag("true");
         }
 
         if (filter.Name.startsWith(_Deployment_Files) && d.inBuild) {
             xml << tag("DeploymentContent")
-                << attrTag("Condition", condition)
+                << attrTag(_Condition, condition)
                 << valueTag("true");
         }
 
@@ -1826,19 +1833,19 @@ void VCXProjectWriter::outputFileConfig(OutputFilterData &d, XmlOutput &xml, Xml
 
             if ( !filter.CompilerTool.ForcedIncludeFiles.isEmpty() ) {
                 xml << tag("ForcedIncludeFiles")
-                    << attrTag("Condition", condition)
+                    << attrTag(_Condition, condition)
                     << valueTagX(filter.CompilerTool.ForcedIncludeFiles);
             }
 
             if ( !filter.CompilerTool.PrecompiledHeaderThrough.isEmpty() ) {
                 xml << tag("PrecompiledHeaderFile")
-                    << attrTag("Condition", condition)
+                    << attrTag(_Condition, condition)
                     << valueTag(filter.CompilerTool.PrecompiledHeaderThrough);
             }
 
             if (filter.CompilerTool.UsePrecompiledHeader != pchUnset) {
                 xml << tag("PrecompiledHeader")
-                    << attrTag("Condition", condition)
+                    << attrTag(_Condition, condition)
                     << valueTag(toString(filter.CompilerTool.UsePrecompiledHeader));
             }
         }
@@ -1850,55 +1857,55 @@ void VCXProjectWriter::outputFileConfig(XmlOutput &xml, XmlOutput &xmlFilter,
 {
     const QString nativeFilePath = Option::fixPathToTargetOS(filePath);
     if (filterName.startsWith(_Source_Files)) {
-        xmlFilter << tag("ClCompile")
+        xmlFilter << tag(_CLCompile)
                   << attrTag("Include", nativeFilePath)
                   << attrTagS("Filter", filterName);
-        xml << tag("ClCompile")
+        xml << tag(_CLCompile)
             << attrTag("Include", nativeFilePath);
     } else if (filterName.startsWith(_Header_Files)) {
-        xmlFilter << tag("ClInclude")
+        xmlFilter << tag(_ClInclude)
                   << attrTag("Include", nativeFilePath)
                   << attrTagS("Filter", filterName);
-        xml << tag("ClInclude")
+        xml << tag(_ClInclude)
             << attrTag("Include", nativeFilePath);
     } else if (filterName.startsWith(_Generated_Files) || filterName.startsWith(_Form_Files)) {
         if (filePath.endsWith(".h")) {
-            xmlFilter << tag("ClInclude")
+            xmlFilter << tag(_ClInclude)
                       << attrTag("Include", nativeFilePath)
                       << attrTagS("Filter", filterName);
-            xml << tag("ClInclude")
+            xml << tag(_ClInclude)
                 << attrTag("Include", nativeFilePath);
         } else if (filePath.endsWith(".cpp")) {
-            xmlFilter << tag("ClCompile")
+            xmlFilter << tag(_CLCompile)
                       << attrTag("Include", nativeFilePath)
                       << attrTagS("Filter", filterName);
-            xml << tag("ClCompile")
+            xml << tag(_CLCompile)
                 << attrTag("Include", nativeFilePath);
         } else if (filePath.endsWith(".res")) {
-            xmlFilter << tag("CustomBuild")
+            xmlFilter << tag(_CustomBuild)
                       << attrTag("Include", nativeFilePath)
                       << attrTagS("Filter", filterName);
-            xml << tag("CustomBuild")
+            xml << tag(_CustomBuild)
                 << attrTag("Include", nativeFilePath);
         } else {
-            xmlFilter << tag("CustomBuild")
+            xmlFilter << tag(_CustomBuild)
                       << attrTag("Include", nativeFilePath)
                       << attrTagS("Filter", filterName);
-            xml << tag("CustomBuild")
+            xml << tag(_CustomBuild)
                 << attrTag("Include", nativeFilePath);
         }
     } else if (filterName.startsWith(_Root_Files)) {
         if (filePath.endsWith(".rc")) {
-            xmlFilter << tag("ResourceCompile")
+            xmlFilter << tag(_ResourceCompile)
                       << attrTag("Include", nativeFilePath);
-            xml << tag("ResourceCompile")
+            xml << tag(_ResourceCompile)
                 << attrTag("Include", nativeFilePath);
         }
     } else {
-        xmlFilter << tag("None")
+        xmlFilter << tag(_None)
                   << attrTag("Include", nativeFilePath)
                   << attrTagS("Filter", filterName);
-        xml << tag("None")
+        xml << tag(_None)
             << attrTag("Include", nativeFilePath);
     }
 }
