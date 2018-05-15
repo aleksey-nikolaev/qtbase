@@ -1690,7 +1690,7 @@ bool checkPriviousAdd(const VCProject &project, const VCFilterFile &info, const 
 
         for (const auto &singleProject : project.SingleProjects) {
             for (const auto &file : singleProject.filterByName(_filterName).Files)
-                if (Option::fixPathToTargetOS(file.file) == Option::fixPathToTargetOS(info.file))
+                if (0 == QString::compare(Option::fixPathToTargetOS(file.file), Option::fixPathToTargetOS(info.file), Qt::CaseInsensitive))
                     return true;
         }
     }
