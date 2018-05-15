@@ -1,29 +1,54 @@
-
 #qmake code
-SOURCES += project.cpp property.cpp main.cpp \
-           library/ioutils.cpp library/proitems.cpp library/qmakevfs.cpp library/qmakeglobals.cpp \
-           library/qmakeparser.cpp library/qmakeevaluator.cpp library/qmakebuiltins.cpp \
+SOURCES += project.cpp \
+           property.cpp \
+           main.cpp \
+           library/ioutils.cpp \
+           library/proitems.cpp \
+           library/qmakevfs.cpp \
+           library/qmakeglobals.cpp \
+           library/qmakeparser.cpp \
+           library/qmakeevaluator.cpp \
+           library/qmakebuiltins.cpp \
            generators/makefile.cpp \
-           generators/unix/unixmake2.cpp generators/unix/unixmake.cpp meta.cpp \
-           option.cpp generators/win32/winmakefile.cpp generators/win32/mingw_make.cpp \
-           generators/makefiledeps.cpp generators/metamakefile.cpp generators/mac/pbuilder_pbx.cpp \
+           generators/unix/unixmake2.cpp \
+           generators/unix/unixmake.cpp \
+           meta.cpp \
+           option.cpp \
+           generators/win32/winmakefile.cpp \
+           generators/win32/mingw_make.cpp \
+           generators/makefiledeps.cpp \
+           generators/metamakefile.cpp \
+           generators/mac/pbuilder_pbx.cpp \
            generators/xmloutput.cpp \
-           generators/win32/msvc_nmake.cpp generators/projectgenerator.cpp \
+           generators/win32/msvc_nmake.cpp \
+           generators/projectgenerator.cpp \
            generators/win32/msvc_vcproj.cpp \
            generators/win32/msvc_vcxproj.cpp \
-           generators/win32/msvc_objectmodel.cpp generators/win32/msbuild_objectmodel.cpp
+           generators/win32/msvc_objectmodel.cpp \
+           generators/win32/msbuild_objectmodel.cpp
 
 HEADERS += project.h property.h \
-           library/qmake_global.h library/ioutils.h library/proitems.h library/qmakevfs.h library/qmakeglobals.h \
-           library/qmakeparser.h library/qmakeevaluator.h library/qmakeevaluator_p.h \
+           library/qmake_global.h \
+           library/ioutils.h \
+           library/proitems.h \
+           library/qmakevfs.h \
+           library/qmakeglobals.h \
+           library/qmakeparser.h \
+           library/qmakeevaluator.h \
+           library/qmakeevaluator_p.h \
            generators/makefile.h \
            generators/unix/unixmake.h meta.h option.h cachekeys.h \
-           generators/win32/winmakefile.h generators/win32/mingw_make.h generators/projectgenerator.h \
-           generators/makefiledeps.h generators/metamakefile.h generators/mac/pbuilder_pbx.h \
-           generators/xmloutput.h generators/win32/msvc_nmake.h \
+           generators/win32/winmakefile.h \
+           generators/win32/mingw_make.h \
+           generators/projectgenerator.h \
+           generators/makefiledeps.h \
+           generators/metamakefile.h generators/mac/pbuilder_pbx.h \
+           generators/xmloutput.h \
+           generators/win32/msvc_nmake.h \
            generators/win32/msvc_vcproj.h \
            generators/win32/msvc_vcxproj.h \
-           generators/win32/msvc_objectmodel.h generators/win32/msbuild_objectmodel.h
+           generators/win32/msvc_objectmodel.h \
+           generators/win32/msbuild_objectmodel.h
 
 bootstrap { #Qt code
    SOURCES+= \
@@ -132,16 +157,39 @@ bootstrap { #Qt code
         qjsonvalue.h
 
     unix {
-        SOURCES += qfilesystemengine_unix.cpp qfilesystemiterator_unix.cpp qfsfileengine_unix.cpp
+        SOURCES += qfilesystemengine_unix.cpp \
+            qfilesystemiterator_unix.cpp \
+            qfsfileengine_unix.cpp
         mac {
-          SOURCES += qcore_mac.cpp qsettings_mac.cpp qcore_mac_objc.mm qlocale_mac.mm
+          SOURCES += qcore_mac.cpp \
+            qsettings_mac.cpp \
+            qcore_mac_objc.mm \
+            qlocale_mac.mm
           LIBS += -framework ApplicationServices -framework CoreServices -framework Foundation
         } else {
           SOURCES += qlocale_unix.cpp
         }
     } else:win32 {
-        SOURCES += qfilesystemengine_win.cpp qfsfileengine_win.cpp qfilesystemiterator_win.cpp qsettings_win.cpp \
-            qsystemlibrary.cpp qlocale_win.cpp registry.cpp
+        SOURCES += qfilesystemengine_win.cpp \
+            qfsfileengine_win.cpp \
+            qfilesystemiterator_win.cpp \
+            qsettings_win.cpp \
+            qsystemlibrary.cpp \
+            qringbuffer.cpp \
+            generators/win32/registry.cpp
+        msvc: {
+          DEFINES += QT_VERSION_STR=\\\"$${QT_VERSION}\\\" \
+            QT_VERSION_MAJOR=$${QT_MAJOR_VERSION} \
+            QT_VERSION_MINOR=$${QT_MINOR_VERSION} \
+            QT_VERSION_PATCH=$${QT_PATCH_VERSION}
+          #Impossible to compile qstring_compat.cpp with pre-compiled headers
+          SOURCES -= qstring_compat.cpp
+          SOURCES += qlocale_win.cpp \
+            qoperatingsystemversion.cpp \
+            qoperatingsystemversion_win.cpp \
+            qrandom.cpp \
+            qdebug.cpp
+        }
         win32-msvc*:LIBS += ole32.lib advapi32.lib netapi32.lib
         mingw:LIBS += -lole32 -luuid -ladvapi32 -lkernel32 -lnetapi32
     }
